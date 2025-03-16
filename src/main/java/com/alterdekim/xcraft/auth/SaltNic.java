@@ -63,6 +63,7 @@ public class SaltNic extends NanoHTTPD {
     private Response handleHasJoinedRequest(IHTTPSession session) {
         String uuid = UserId.generateUserId(session.getParameters().get("username").get(0));
         if( this.sessions.containsKey(uuid) && this.sessions.get(uuid) ) {
+            this.sessions.remove(uuid);
             return newFixedLengthResponse(Response.Status.OK, "application/json", "{\n" +
                     "  \"id\" : \""+uuid+"\",\n" +
                     "  \"name\" : \""+session.getParameters().get("username").get(0)+"\",\n" +
@@ -101,7 +102,9 @@ public class SaltNic extends NanoHTTPD {
 
             UserStorage.saveUser(uuid, PasswordHasher.hashPassword(password));
 
-            return newFixedLengthResponse(Response.Status.OK, "text/plain", "User registered successfully");
+            JSONObject response = new JSONObject();
+            response.put("uuid", uuid);
+            return newFixedLengthResponse(Response.Status.OK, "text/plain", response.toJSONString());
         } catch (Exception e) {
             logger.warning("Error while processing sign up request from client: " + e.getMessage());
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error: " + e.getMessage());
