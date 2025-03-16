@@ -4,11 +4,11 @@ import fi.iki.elonen.NanoHTTPD;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import static com.alterdekim.xcraft.auth.XCraft.SERVER_PORT;
@@ -39,6 +39,8 @@ public class SaltNic extends NanoHTTPD {
             return handleHasJoinedRequest(session);
         } else if (uri.startsWith("/api/profile/") && method == Method.GET) {
             return handleProfileRequest(session, uri);
+        } else if (uri.startsWith("/api/register") && method == Method.POST) {
+            return handleProfileRegistration(session);
         }
         return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "404 Not Found");
     }
@@ -46,9 +48,7 @@ public class SaltNic extends NanoHTTPD {
     private Response handleProfileRequest(IHTTPSession session, String uri) {
         if( uri.length() != 45 ) return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error");
         String uuid = uri.substring(13);
-        logger.info("Substr success " + uuid);
         if( UserStorage.getUserPassword(uuid) == null ) return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error");
-        logger.info("Success response");
         return newFixedLengthResponse(Response.Status.OK, "application/json", "{\n" +
                 "  \"id\" : \""+uuid+"\",\n" +
                 "  \"name\" : \"Notch\",\n" +
@@ -61,8 +61,7 @@ public class SaltNic extends NanoHTTPD {
     }
 
     private Response handleHasJoinedRequest(IHTTPSession session) {
-        String uuid = UUID.nameUUIDFromBytes(session.getParameters().get("username").get(0).getBytes()).toString().replace("-", "");
-        logger.info("hasJoined params: " + uuid);
+        String uuid = UserId.generateUserId(session.getParameters().get("username").get(0));
         if( this.sessions.containsKey(uuid) && this.sessions.get(uuid) ) {
             return newFixedLengthResponse(Response.Status.OK, "application/json", "{\n" +
                     "  \"id\" : \""+uuid+"\",\n" +
@@ -75,6 +74,38 @@ public class SaltNic extends NanoHTTPD {
                     "}");
         }
         return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error");
+    }
+
+    private Response handleProfileRegistration(IHTTPSession session) {
+        try {
+            Map<String, String> files = new HashMap<>();
+            session.parseBody(files);
+            JSONObject json = parseJSON(files.get("postData"));
+
+            if (json == null) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Invalid JSON format");
+            }
+
+            String username = (String) json.get("username");
+            String password = (String) json.get("password");
+
+            if (username == null || password == null) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Missing username or password");
+            }
+
+            String uuid = UserId.generateUserId(username);
+
+            if( UserStorage.getUserPassword(uuid) != null ) {
+                return newFixedLengthResponse(Response.Status.CONFLICT, "text/plain", "User already exists");
+            }
+
+            UserStorage.saveUser(uuid, PasswordHasher.hashPassword(password));
+
+            return newFixedLengthResponse(Response.Status.OK, "text/plain", "User registered successfully");
+        } catch (Exception e) {
+            logger.warning("Error while processing sign up request from client: " + e.getMessage());
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error: " + e.getMessage());
+        }
     }
 
     private Response handleJoinRequest(IHTTPSession session) {
