@@ -1,0 +1,6 @@
+name: XCraftAuth
+main: com.alterdekim.xcraft.auth.XCraft
+version: 1.0
+author: Michael Wain
+api-version: 1.12.2
+description: XCraft authentication system for Spigot
