@@ -7,6 +7,7 @@ import org.json.simple.parser.ParseException;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -61,18 +62,22 @@ public class SaltNic extends NanoHTTPD {
     }
 
     private Response handleHasJoinedRequest(IHTTPSession session) {
-        String uuid = UserId.generateUserId(session.getParameters().get("username").get(0));
-        if( this.sessions.containsKey(uuid) && this.sessions.get(uuid) ) {
-            this.sessions.remove(uuid);
-            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\n" +
-                    "  \"id\" : \""+uuid+"\",\n" +
-                    "  \"name\" : \""+session.getParameters().get("username").get(0)+"\",\n" +
-                    "  \"properties\" : [ {\n" +
-                    "    \"name\" : \"textures\",\n" +
-                    "    \"value\" : \"ewogICJ0aW1lc3RhbXAiIDogMTc0MjA1ODQ1MDI1MywKICAicHJvZmlsZUlkIiA6ICJmYzE0MzZmZmQ3MDA0NWFmOWMxODNkZjhjODMwMmU5ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJEYXJ0SmV2ZGVyIiwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVlMTM1Y2ZkYTgwM2U3ZDQ4NTNhN2M5YjQ5N2JhZjM3YWNlNmZkZGYyYjYyNDI1MWY3YjkwNmYyOTAwZWRiMyIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9LAogICAgIkNBUEUiIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2EyZThkOTdlYzc5MTAwZTkwYTc1ZDM2OWQxYjNiYTgxMjczYzRmODJiYzFiNzM3ZTkzNGVlZDRhODU0YmUxYjYiCiAgICB9CiAgfQp9\"\n" +
-                    "  } ],\n" +
-                    "  \"profileActions\" : [ ]\n" +
-                    "}");
+        try {
+            String uuid = UserId.generateUserId(session.getParameters().get("username").get(0));
+            if (this.sessions.containsKey(uuid) && this.sessions.get(uuid)) {
+                this.sessions.remove(uuid);
+                return newFixedLengthResponse(Response.Status.OK, "application/json", "{\n" +
+                        "  \"id\" : \"" + uuid + "\",\n" +
+                        "  \"name\" : \"" + session.getParameters().get("username").get(0) + "\",\n" +
+                        "  \"properties\" : [ {\n" +
+                        "    \"name\" : \"textures\",\n" +
+                        "    \"value\" : \"ewogICJ0aW1lc3RhbXAiIDogMTc0MjA1ODQ1MDI1MywKICAicHJvZmlsZUlkIiA6ICJmYzE0MzZmZmQ3MDA0NWFmOWMxODNkZjhjODMwMmU5ZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJEYXJ0SmV2ZGVyIiwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzVlMTM1Y2ZkYTgwM2U3ZDQ4NTNhN2M5YjQ5N2JhZjM3YWNlNmZkZGYyYjYyNDI1MWY3YjkwNmYyOTAwZWRiMyIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9LAogICAgIkNBUEUiIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2EyZThkOTdlYzc5MTAwZTkwYTc1ZDM2OWQxYjNiYTgxMjczYzRmODJiYzFiNzM3ZTkzNGVlZDRhODU0YmUxYjYiCiAgICB9CiAgfQp9\"\n" +
+                        "  } ],\n" +
+                        "  \"profileActions\" : [ ]\n" +
+                        "}");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
         return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error");
     }
@@ -90,7 +95,7 @@ public class SaltNic extends NanoHTTPD {
             String username = (String) json.get("username");
             String password = (String) json.get("password");
 
-            if (username == null || password == null) {
+            if (username == null || password == null || password.length() < 3 || username.length() < 3) {
                 return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Missing username or password");
             }
 
