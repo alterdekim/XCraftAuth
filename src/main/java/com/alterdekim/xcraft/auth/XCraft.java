@@ -13,6 +13,7 @@ public class XCraft extends JavaPlugin {
     private static SaltNic server = null;
 
     public static int SERVER_PORT = 8999;
+    public static int INTERNAL_PORT = 8999;
     public static String PUBLIC_DOMAIN = "localhost";
     public static Boolean USE_HTTPS = false;
 
@@ -23,6 +24,7 @@ public class XCraft extends JavaPlugin {
             try {
                 getLogger().info("Starting SaltNic server...");
                 SERVER_PORT = getConfig().getInt("public_port");
+                INTERNAL_PORT = getConfig().getInt("internal_port");
                 PUBLIC_DOMAIN = getConfig().getString("public_domain");
                 USE_HTTPS = getConfig().getBoolean("use_https");
                 server = new SaltNic(getLogger());
@@ -45,9 +47,9 @@ public class XCraft extends JavaPlugin {
 
     private void patchAuthLib() throws Exception {
         Class<?> clazz = Class.forName("com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService");
-        modifyFinalField(clazz, "BASE_URL", "http://localhost:"+SERVER_PORT+"/api/");
-        modifyFinalField(clazz, "JOIN_URL", new URL("http://localhost:"+SERVER_PORT+"/api/join"));
-        modifyFinalField(clazz, "CHECK_URL", new URL("http://localhost:"+SERVER_PORT+"/api/hasJoined"));
+        modifyFinalField(clazz, "BASE_URL", "http://localhost:"+INTERNAL_PORT+"/api/");
+        modifyFinalField(clazz, "JOIN_URL", new URL("http://localhost:"+INTERNAL_PORT+"/api/join"));
+        modifyFinalField(clazz, "CHECK_URL", new URL("http://localhost:"+INTERNAL_PORT+"/api/hasJoined"));
     }
 
     private void modifyFinalField(Class<?> clazz, String fieldName, Object newValue) throws Exception {

@@ -22,8 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
-import static com.alterdekim.xcraft.auth.XCraft.PUBLIC_DOMAIN;
-import static com.alterdekim.xcraft.auth.XCraft.SERVER_PORT;
+import static com.alterdekim.xcraft.auth.XCraft.*;
 
 public class SaltNic extends NanoHTTPD {
 
@@ -38,12 +37,12 @@ public class SaltNic extends NanoHTTPD {
     private static final int MAX_FILE_SIZE = 1024 * 1024;
 
     public SaltNic(Logger logger) throws IOException {
-        super(SERVER_PORT);
+        super(INTERNAL_PORT);
         this.logger = logger;
         this.storage = new UserStorage();
         this.sessions = new ConcurrentHashMap<>();
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-        logger.info("SaltNic session server started on http://localhost:"+SERVER_PORT);
+        logger.info("SaltNic session server started on http://localhost:"+INTERNAL_PORT);
     }
 
     @Override
@@ -223,7 +222,7 @@ public class SaltNic extends NanoHTTPD {
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
 
         if( new File(SKIN_DIRECTORY, uuid + ".png").exists() ) {
-            MinecraftProfileTexture texture = new MinecraftProfileTexture("http://"+PUBLIC_DOMAIN+":"+SERVER_PORT+"/api/skin/s" + uuid, new HashMap<>());
+            MinecraftProfileTexture texture = new MinecraftProfileTexture("http" + (USE_HTTPS ? "s" : "") + "://"+PUBLIC_DOMAIN+":"+SERVER_PORT+"/api/skin/s" + uuid, new HashMap<>());
             if( storage.getSkinModel(uuid) == User.SkinModel.Alex ) {
                 texture.getMetadata().put("model", "slim");
             }
@@ -231,7 +230,7 @@ public class SaltNic extends NanoHTTPD {
         }
 
         if( new File(CAPE_DIRECTORY, uuid + ".png").exists() ) {
-            textures.put(MinecraftProfileTexture.Type.CAPE, new MinecraftProfileTexture("http://"+PUBLIC_DOMAIN+":"+SERVER_PORT+"/api/cape/a" + uuid, new HashMap<>()));
+            textures.put(MinecraftProfileTexture.Type.CAPE, new MinecraftProfileTexture("http"+(USE_HTTPS ? "s" : "")+"://"+PUBLIC_DOMAIN+":"+SERVER_PORT+"/api/cape/a" + uuid, new HashMap<>()));
         }
 
         MinecraftTexturesPayload minecraftTexturesPayload = new MinecraftTexturesPayload(System.currentTimeMillis(), uuid, this.storage.getUsername(uuid), textures);
