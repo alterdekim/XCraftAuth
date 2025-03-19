@@ -12,7 +12,9 @@ public class XCraft extends JavaPlugin {
 
     private static SaltNic server = null;
 
-    public static final int SERVER_PORT = 8999;
+    public static int SERVER_PORT = 8999;
+    public static String PUBLIC_DOMAIN = "localhost";
+    public static Boolean USE_HTTPS = false;
 
     @Override
     public void onEnable() {
@@ -20,17 +22,24 @@ public class XCraft extends JavaPlugin {
         if( server == null ) {
             try {
                 getLogger().info("Starting SaltNic server...");
+                SERVER_PORT = getConfig().getInt("public_port");
+                PUBLIC_DOMAIN = getConfig().getString("public_domain");
+                USE_HTTPS = getConfig().getBoolean("use_https");
                 server = new SaltNic(getLogger());
             } catch (IOException e) {
                 getLogger().severe("Failed to start SaltNic server: " + e.getMessage());
             }
         }
         getLogger().info("Patching AuthLib URLs...");
-        try {
-            patchAuthLib();
-            getLogger().info("AuthLib URLs patched successfully!");
-        } catch (Exception e) {
-            getLogger().severe("Failed to patch AuthLib: " + e.getMessage());
+        while(true) {
+            try {
+                patchAuthLib();
+                getLogger().info("AuthLib URLs patched successfully!");
+                return;
+            } catch (Exception e) {
+                e.printStackTrace();
+                getLogger().severe("Failed to patch AuthLib: " + e.getMessage());
+            }
         }
     }
 
