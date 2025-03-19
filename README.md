@@ -1,5 +1,9 @@
 # 🔐 XCraftAuth – Yggdrasil Authentication
 
+![Jenkins Build](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fjenkins.awain.net%2Fjob%2FXCraftAuth%2F)
+![Gitea Last Commit](https://img.shields.io/gitea/last-commit/alterwain/XCraftAuth?gitea_url=https%3A%2F%2Fgitea.awain.net%2F)
+
+
 A powerful **custom session server** plugin for Spigot-based servers, allowing full **Yggdrasil authentication** support across **1.8-1.16.5 Minecraft versions**! This plugin enables true **online mode authentication** with a self-hosted session server, providing flexibility for your Minecraft network.
 
 **THIS PLUGIN ONLY WORKS ON SERVERS THAT RUN UNDER JAVA 8, NEWER VERSIONS OF JAVA WILL BREAK THIS PLUGIN**
@@ -32,7 +36,7 @@ A powerful **custom session server** plugin for Spigot-based servers, allowing f
 
 ## 📥 Installation
 
-1. **Download the latest release** from Jenkins.
+1. **Download the latest release** from [Jenkins](https://jenkins.awain.net/job/XCraftAuth/lastSuccessfulBuild/).
 2. **Place the JAR file** in your `plugins` folder.
 3. **Restart your server** to generate the configuration file.
 4. **Configure your public domain and public port (for reverse proxy setup)** in the config file (`config.yml`).
