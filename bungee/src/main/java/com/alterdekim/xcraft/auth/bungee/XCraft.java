@@ -2,8 +2,7 @@ package com.alterdekim.xcraft.auth.bungee;
 
 import com.alterdekim.xcraft.auth.SaltNic;
 import net.md_5.bungee.api.connection.PendingConnection;
-import net.md_5.bungee.api.event.LoginEvent;
-import net.md_5.bungee.api.event.PlayerHandshakeEvent;
+import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -55,15 +54,22 @@ public class XCraft extends Plugin implements Listener {
     }
 
     @EventHandler
-    public void onLogin(LoginEvent event) {
+    public void onPreLogin(PreLoginEvent event) {
         try {
-            if( server.getSessionValue(event.getConnection().getUniqueId().toString()) ) {
-                server.deleteSessionRequest(event.getConnection().getUniqueId().toString());
-                UUID customUUID = UUID.nameUUIDFromBytes(("xcraft-" + event.getConnection().getName()).getBytes());
-                event.setCancelled(false);
-                event.getConnection().setUniqueId(customUUID);
-                getLogger().info("Player " + event.getConnection().getName() + " is now using UUID: " + customUUID);
+            PendingConnection connection = event.getConnection();
+
+            // Ensure we are dealing with InitialHandler
+            if (!connection.getClass().getName().equals("net.md_5.bungee.connection.InitialHandler")) {
+                return;
             }
+
+            Class<?> initialHandlerClass = connection.getClass();
+
+            Field onlineModeField = initialHandlerClass.getDeclaredField("onlineMode");
+            onlineModeField.setAccessible(true);
+            onlineModeField.set(connection, false); // Disable Mojang auth
+
+            getLogger().info("Bypassed Mojang authentication for " + connection.getName());
         } catch (Exception e) {
             e.printStackTrace();
         }
