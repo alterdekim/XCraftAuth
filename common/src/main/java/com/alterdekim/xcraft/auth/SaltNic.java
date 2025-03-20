@@ -172,6 +172,17 @@ public class SaltNic extends NanoHTTPD {
         }
     }
 
+    public boolean getSessionValue(String uuid) {
+        if( this.sessions.containsKey(uuid) ) {
+            return this.sessions.get(uuid);
+        }
+        return false;
+    }
+
+    public void deleteSessionRequest(String uuid) {
+        this.sessions.remove(uuid);
+    }
+
     private Response handleSetModel(IHTTPSession session) {
         try {
             String playerUUID = session.getParameters().get("uuid").get(0);

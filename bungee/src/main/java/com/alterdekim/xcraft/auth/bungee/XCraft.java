@@ -1,20 +1,28 @@
 package com.alterdekim.xcraft.auth.bungee;
 
 import com.alterdekim.xcraft.auth.SaltNic;
+import net.md_5.bungee.api.connection.PendingConnection;
+import net.md_5.bungee.api.event.LoginEvent;
+import net.md_5.bungee.api.event.PlayerHandshakeEvent;
+import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import net.md_5.bungee.event.EventHandler;
+import sun.misc.Unsafe;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.util.UUID;
 
 import static com.alterdekim.xcraft.auth.lib.Patcher.patchAuthLib;
 
-public class XCraft extends Plugin {
+public class XCraft extends Plugin implements Listener {
 
     private static SaltNic server = null;
 
@@ -25,6 +33,7 @@ public class XCraft extends Plugin {
 
     @Override
     public void onEnable() {
+        getProxy().getPluginManager().registerListener(this, this);
         try {
             Configuration config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
             SERVER_PORT = config.getInt("public_port");
@@ -43,18 +52,24 @@ public class XCraft extends Plugin {
                 getLogger().severe("Failed to start SaltNic server: " + e.getMessage());
             }
         }
-        getLogger().info("Patching AuthLib URLs...");
-        while(true) {
-            try {
-                patchAuthLib(getLogger(), INTERNAL_PORT);
-                getLogger().info("AuthLib URLs patched successfully!");
-                return;
-            } catch (Exception e) {
-                e.printStackTrace();
-                getLogger().severe("Failed to patch AuthLib: " + e.getMessage());
+    }
+
+    @EventHandler
+    public void onLogin(LoginEvent event) {
+        try {
+            if( server.getSessionValue(event.getConnection().getUniqueId().toString()) ) {
+                server.deleteSessionRequest(event.getConnection().getUniqueId().toString());
+                UUID customUUID = UUID.nameUUIDFromBytes(("xcraft-" + event.getConnection().getName()).getBytes());
+                event.setCancelled(false);
+                event.getConnection().setUniqueId(customUUID);
+                getLogger().info("Player " + event.getConnection().getName() + " is now using UUID: " + customUUID);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
+
+
 
     @Override
     public void onDisable() {
