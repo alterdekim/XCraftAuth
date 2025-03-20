@@ -58,16 +58,14 @@ public class XCraft extends Plugin implements Listener {
         try {
             PendingConnection connection = event.getConnection();
 
-            // Ensure we are dealing with InitialHandler
-            if (!connection.getClass().getName().equals("net.md_5.bungee.connection.InitialHandler")) {
-                return;
-            }
+            if (!connection.getClass().getName().equals("net.md_5.bungee.connection.InitialHandler")) return;
+            if( !server.getSessionValue(connection.getUniqueId().toString()) ) return;
 
             Class<?> initialHandlerClass = connection.getClass();
 
             Field onlineModeField = initialHandlerClass.getDeclaredField("onlineMode");
             onlineModeField.setAccessible(true);
-            onlineModeField.set(connection, false); // Disable Mojang auth
+            onlineModeField.set(connection, false);
 
             getLogger().info("Bypassed Mojang authentication for " + connection.getName());
         } catch (Exception e) {
