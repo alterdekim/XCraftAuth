@@ -234,7 +234,7 @@ public class SaltNic extends NanoHTTPD {
         }
     }
 
-    private MinecraftProperty getTextures(String uuid) {
+    public MinecraftProperty getTextures(String uuid) {
         Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = new HashMap<>();
 
         if( new File(SKIN_DIRECTORY, uuid + ".png").exists() ) {

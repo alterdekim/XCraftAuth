@@ -67,7 +67,33 @@ public class XCraft extends Plugin implements Listener {
             onlineModeField.setAccessible(true);
             onlineModeField.set(connection, false);
 
+            injectCustomSkin(connection);
+
             getLogger().info("Bypassed Mojang authentication for " + connection.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void injectCustomSkin(PendingConnection connection) {
+        try {
+            Class<?> initialHandlerClass = connection.getClass();
+
+            Field loginProfileField = initialHandlerClass.getDeclaredField("loginProfile");
+            loginProfileField.setAccessible(true);
+
+            Class<?> loginResultClass = Class.forName("net.md_5.bungee.connection.LoginResult");
+            Class<?> propertyClass = Class.forName("net.md_5.bungee.connection.LoginResult$Property");
+
+            Object[] properties = new Object[1];
+            properties[0] = propertyClass.getConstructor(String.class, String.class, String.class)
+                    .newInstance("textures", server.getTextures(connection.getUniqueId().toString()).getValue(), null);
+
+            Object customLoginResult = loginResultClass
+                    .getConstructor(String.class, UUID.class, propertyClass.arrayType())
+                    .newInstance(connection.getName(), connection.getUniqueId(), properties);
+
+            loginProfileField.set(connection, customLoginResult);
         } catch (Exception e) {
             e.printStackTrace();
         }
