@@ -22,8 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
-import static com.alterdekim.xcraft.auth.XCraft.*;
-
 public class SaltNic extends NanoHTTPD {
 
     private final Logger logger;
@@ -36,13 +34,20 @@ public class SaltNic extends NanoHTTPD {
     private static final String CAPE_DIRECTORY = "plugins/XCraftAuth/capes";
     private static final int MAX_FILE_SIZE = 1024 * 1024;
 
-    public SaltNic(Logger logger) throws IOException {
-        super(INTERNAL_PORT);
+    private final boolean USE_HTTPS;
+    private final String PUBLIC_DOMAIN;
+    private final int SERVER_PORT;
+
+    public SaltNic(Logger logger, int internal_port, boolean use_https, String public_domain, int server_port) throws IOException {
+        super(internal_port);
         this.logger = logger;
+        this.USE_HTTPS = use_https;
+        this.PUBLIC_DOMAIN = public_domain;
+        this.SERVER_PORT = server_port;
         this.storage = new UserStorage();
         this.sessions = new ConcurrentHashMap<>();
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-        logger.info("SaltNic session server started on http://localhost:"+INTERNAL_PORT);
+        logger.info("SaltNic session server started on http://localhost:"+ internal_port);
     }
 
     @Override

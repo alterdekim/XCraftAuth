@@ -1,0 +1,4 @@
+public_domain: "localhost"
+public_port: 8999
+internal_port: 8999
+use_https: false

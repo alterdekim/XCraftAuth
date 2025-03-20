@@ -1,12 +1,15 @@
-package com.alterdekim.xcraft.auth;
+package com.alterdekim.xcraft.auth.spigot;
 
 
+import com.alterdekim.xcraft.auth.SaltNic;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+
+import static com.alterdekim.xcraft.auth.lib.Patcher.patchAuthLib;
 
 public class XCraft extends JavaPlugin {
 
@@ -27,7 +30,7 @@ public class XCraft extends JavaPlugin {
                 INTERNAL_PORT = getConfig().getInt("internal_port");
                 PUBLIC_DOMAIN = getConfig().getString("public_domain");
                 USE_HTTPS = getConfig().getBoolean("use_https");
-                server = new SaltNic(getLogger());
+                server = new SaltNic(getLogger(), INTERNAL_PORT, USE_HTTPS, PUBLIC_DOMAIN, SERVER_PORT);
             } catch (IOException e) {
                 getLogger().severe("Failed to start SaltNic server: " + e.getMessage());
             }
@@ -35,7 +38,7 @@ public class XCraft extends JavaPlugin {
         getLogger().info("Patching AuthLib URLs...");
         while(true) {
             try {
-                patchAuthLib();
+                patchAuthLib(getLogger(), INTERNAL_PORT);
                 getLogger().info("AuthLib URLs patched successfully!");
                 return;
             } catch (Exception e) {
@@ -43,25 +46,6 @@ public class XCraft extends JavaPlugin {
                 getLogger().severe("Failed to patch AuthLib: " + e.getMessage());
             }
         }
-    }
-
-    private void patchAuthLib() throws Exception {
-        Class<?> clazz = Class.forName("com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService");
-        modifyFinalField(clazz, "BASE_URL", "http://localhost:"+INTERNAL_PORT+"/api/");
-        modifyFinalField(clazz, "JOIN_URL", new URL("http://localhost:"+INTERNAL_PORT+"/api/join"));
-        modifyFinalField(clazz, "CHECK_URL", new URL("http://localhost:"+INTERNAL_PORT+"/api/hasJoined"));
-    }
-
-    private void modifyFinalField(Class<?> clazz, String fieldName, Object newValue) throws Exception {
-        Field field = clazz.getDeclaredField(fieldName);
-        field.setAccessible(true);
-
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
-        field.set(null, newValue);
-        getLogger().info(fieldName + " patched to: " + newValue);
     }
 
     @Override
