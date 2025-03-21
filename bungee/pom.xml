@@ -11,8 +11,8 @@
 
     <repositories>
         <repository>
-            <id>bungeecord-repo</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>local-maven</id>
+            <url>file://${user.home}/.m2/repository</url>
         </repository>
     </repositories>
 
@@ -23,6 +23,12 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-api</artifactId>
+            <version>${bungee.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.md-5</groupId>
+            <artifactId>bungeecord-proxy</artifactId>
             <version>${bungee.api.version}</version>
             <scope>provided</scope>
         </dependency>

@@ -1,6 +1,10 @@
 package com.alterdekim.xcraft.auth.bungee;
 
 import com.alterdekim.xcraft.auth.SaltNic;
+import net.md_5.bungee.BungeeCord;
+import net.md_5.bungee.EncryptionUtil;
+import net.md_5.bungee.Util;
+import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -8,18 +12,28 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import net.md_5.bungee.connection.InitialHandler;
+import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.event.EventHandler;
-import sun.misc.Unsafe;
+import net.md_5.bungee.http.HttpClient;
+import net.md_5.bungee.jni.cipher.BungeeCipher;
+import net.md_5.bungee.netty.ChannelWrapper;
+import net.md_5.bungee.netty.cipher.CipherDecoder;
+import net.md_5.bungee.netty.cipher.CipherEncoder;
+import net.md_5.bungee.protocol.packet.EncryptionRequest;
+import net.md_5.bungee.protocol.packet.EncryptionResponse;
 
+import javax.crypto.SecretKey;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.net.URLEncoder;
 import java.nio.file.Files;
-import java.util.UUID;
-
-import static com.alterdekim.xcraft.auth.lib.Patcher.patchAuthLib;
+import java.security.MessageDigest;
+import java.util.logging.Level;
 
 public class XCraft extends Plugin implements Listener {
 
@@ -59,47 +73,86 @@ public class XCraft extends Plugin implements Listener {
             PendingConnection connection = event.getConnection();
 
             if (!connection.getClass().getName().equals("net.md_5.bungee.connection.InitialHandler")) return;
-            if( !server.getSessionValue(connection.getUniqueId().toString()) ) return;
 
             Class<?> initialHandlerClass = connection.getClass();
 
-            Field onlineModeField = initialHandlerClass.getDeclaredField("onlineMode");
-            onlineModeField.setAccessible(true);
-            onlineModeField.set(connection, false);
 
-            injectCustomSkin(connection);
+            Method hasJoinedMethod = initialHandlerClass.getDeclaredMethod("handle", EncryptionResponse.class);
+            hasJoinedMethod.setAccessible(true);
+
+            Method finish = initialHandlerClass.getDeclaredMethod("finish");
+            finish.setAccessible(true);
+
+            Field ch = initialHandlerClass.getDeclaredField("ch");
+            ch.setAccessible(true);
+
+            Field request = initialHandlerClass.getDeclaredField("request");
+            request.setAccessible(true);
+
+            Field loginProfile = initialHandlerClass.getDeclaredField("loginProfile");
+            loginProfile.setAccessible(true);
+
+            Field name = initialHandlerClass.getDeclaredField("name");
+            name.setAccessible(true);
+
+            Field uniqueId = initialHandlerClass.getDeclaredField("uniqueId");
+            uniqueId.setAccessible(true);
+
+            InitialHandler initialHandler = (InitialHandler) connection;
+
+            Object proxy = Proxy.newProxyInstance(
+                    initialHandlerClass.getClassLoader(),
+                    new Class[]{initialHandlerClass},
+                    (proxy1, method, args) -> {
+                        if (method.getName().equals("handle") && args.length == 1 && args[0].getClass() == EncryptionResponse.class) {
+                            getLogger().info("Intercepted hasJoined request, returning fake response...");
+                            SecretKey sharedKey = EncryptionUtil.getSecret((EncryptionResponse) args[0], (EncryptionRequest) request.get(initialHandler));
+                            BungeeCipher decrypt = EncryptionUtil.getCipher(false, sharedKey);
+                            ((ChannelWrapper)ch.get(initialHandler)).addBefore("frame-decoder", "decrypt", new CipherDecoder(decrypt));
+                            BungeeCipher encrypt = EncryptionUtil.getCipher(true, sharedKey);
+                            ((ChannelWrapper)ch.get(initialHandler)).addBefore("frame-prepender", "encrypt", new CipherEncoder(encrypt));
+                            String encName = URLEncoder.encode(initialHandler.getName(), "UTF-8");
+                            MessageDigest sha = MessageDigest.getInstance("SHA-1");
+                            for (byte[] bit : new byte[][]{((EncryptionRequest) request.get(initialHandler)).getServerId().getBytes("ISO_8859_1"), sharedKey.getEncoded(), EncryptionUtil.keys.getPublic().getEncoded()}) {
+                                sha.update(bit);
+                            }
+                            String authURL = "http://localhost:"+INTERNAL_PORT+"/api/hasJoined?username=" + encName;
+                            Callback<String> handler = new Callback<String>(){
+
+                                @Override
+                                public void done(String result, Throwable error) {
+                                    if (error == null) {
+                                        LoginResult obj = BungeeCord.getInstance().gson.fromJson(result, LoginResult.class);
+                                        if (obj != null && obj.getId() != null) {
+                                            try {
+                                                loginProfile.set(initialHandler, obj);
+                                                name.set(initialHandler, obj.getName());
+                                                uniqueId.set(initialHandler, Util.getUUID(obj.getId()));
+                                                finish.invoke(initialHandler);
+                                                return;
+                                            } catch (Exception e) {
+                                                getLogger().log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", e);
+                                            }
+                                        }
+                                        initialHandler.disconnect("You're in offline mode");
+                                    } else {
+                                        initialHandler.disconnect("XCraftAuth has failed to authenticate you");
+                                        getLogger().log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", error);
+                                    }
+                                }
+                            };
+                            HttpClient.get(authURL, ((ChannelWrapper)ch.get(initialHandler)).getHandle().eventLoop(), handler);
+                            return new Object();
+                        }
+                        return method.invoke(connection, args);
+                    }
+            );
 
             getLogger().info("Bypassed Mojang authentication for " + connection.getName());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    private void injectCustomSkin(PendingConnection connection) {
-        try {
-            Class<?> initialHandlerClass = connection.getClass();
-
-            Field loginProfileField = initialHandlerClass.getDeclaredField("loginProfile");
-            loginProfileField.setAccessible(true);
-
-            Class<?> loginResultClass = Class.forName("net.md_5.bungee.connection.LoginResult");
-            Class<?> propertyClass = Class.forName("net.md_5.bungee.connection.LoginResult$Property");
-
-            Object[] properties = new Object[1];
-            properties[0] = propertyClass.getConstructor(String.class, String.class, String.class)
-                    .newInstance("textures", server.getTextures(connection.getUniqueId().toString()).getValue(), null);
-
-            Object customLoginResult = loginResultClass
-                    .getConstructor(String.class, UUID.class, propertyClass.arrayType())
-                    .newInstance(connection.getName(), connection.getUniqueId(), properties);
-
-            loginProfileField.set(connection, customLoginResult);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
 
     @Override
     public void onDisable() {
@@ -116,7 +169,6 @@ public class XCraft extends Plugin implements Listener {
         }
 
         File file = new File(getDataFolder(), "config.yml");
-
 
         if (!file.exists()) {
             try (InputStream in = getResourceAsStream("config.yml")) {
