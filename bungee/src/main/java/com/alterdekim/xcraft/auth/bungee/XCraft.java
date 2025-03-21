@@ -80,25 +80,16 @@ public class XCraft extends Plugin {
 
     @SuppressWarnings("unchecked")
     private void injectListener(int version) throws Exception {
-        Field protocolsField = Protocol.LOGIN.TO_SERVER.getClass().getDeclaredField("protocols");
-        protocolsField.setAccessible(true);
-        TIntObjectMap<?> protocols = (TIntObjectMap)protocolsField.get(Protocol.LOGIN.TO_SERVER);
+        Class<?> toServerClass = Protocol.LOGIN.TO_SERVER.getClass();
 
-        Object protocolData = protocols.get(version);
-        Field packetMapField = protocolData.getClass().getDeclaredField("packetMap");
-        Field packetConstructorsField = protocolData.getClass().getDeclaredField("packetConstructors");
-        packetMapField.setAccessible(true);
-        packetConstructorsField.setAccessible(true);
-        TObjectIntMap packetMap =  (TObjectIntMap)packetMapField.get(protocolData);
-        Constructor<? extends DefinedPacket>[] packetConstructors =  (Constructor<? extends DefinedPacket>[]) packetConstructorsField.get(protocolData);
+        Class<?> protocolMappingClass = Class.forName("net.md_5.bungee.protocol.Protocol$ProtocolMapping");
+        Constructor<?> pConstructor = protocolMappingClass.getDeclaredConstructor(int.class, int.class);
+        pConstructor.setAccessible(true);
 
-        packetMap.remove(EncryptionResponse.class);
-        packetMap.put( EncryptionResponsePacket.class, 1);
-        packetConstructors[1] = EncryptionResponsePacket.class.getDeclaredConstructor();
+        Method registerPacketMethod = toServerClass.getDeclaredMethod("registerPacket",  Class.class, protocolMappingClass );
+        registerPacketMethod.setAccessible(true);
+        registerPacketMethod.invoke(toServerClass, EncryptionResponsePacket.class, pConstructor.newInstance(version, 1));
 
-        packetMapField.set(protocolData, packetMap);
-        packetConstructorsField.set(protocolData, packetConstructors);
-        protocolsField.set(Protocol.LOGIN.TO_SERVER, protocols);
     }
 
     @Override
