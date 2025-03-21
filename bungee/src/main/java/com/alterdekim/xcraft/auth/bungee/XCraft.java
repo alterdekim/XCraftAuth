@@ -22,6 +22,7 @@ import net.md_5.bungee.jni.cipher.BungeeCipher;
 import net.md_5.bungee.netty.ChannelWrapper;
 import net.md_5.bungee.netty.cipher.CipherDecoder;
 import net.md_5.bungee.netty.cipher.CipherEncoder;
+import net.md_5.bungee.protocol.DefinedPacket;
 import net.md_5.bungee.protocol.Protocol;
 import net.md_5.bungee.protocol.ProtocolConstants;
 import net.md_5.bungee.protocol.packet.EncryptionRequest;
@@ -31,6 +32,7 @@ import javax.crypto.SecretKey;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -88,12 +90,11 @@ public class XCraft extends Plugin {
         packetMapField.setAccessible(true);
         packetConstructorsField.setAccessible(true);
         TObjectIntMap packetMap =  (TObjectIntMap)packetMapField.get(protocolData);
-        TIntObjectMap packetConstructors =  (TIntObjectMap)packetConstructorsField.get(protocolData);
+        Constructor<? extends DefinedPacket>[] packetConstructors =  (Constructor<? extends DefinedPacket>[]) packetConstructorsField.get(protocolData);
 
         packetMap.remove(EncryptionResponse.class);
-        packetConstructors.remove(0x01);
         packetMap.put( EncryptionResponsePacket.class, 0x01);
-        packetConstructors.put( 0x01, EncryptionResponsePacket.class.getDeclaredConstructor() );
+        packetConstructors[0x01] = EncryptionResponsePacket.class.getDeclaredConstructor();
 
         packetMapField.set(protocolData, packetMap);
         packetConstructorsField.set(protocolData, packetConstructors);
