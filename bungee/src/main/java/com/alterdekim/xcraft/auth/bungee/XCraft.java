@@ -53,6 +53,7 @@ public class XCraft extends Plugin {
         try {
             injectListener(47);
         } catch(Exception e) {
+            e.printStackTrace();
             getLogger().severe("Error injecting auth packet. " + e.getMessage());
         }
         try {
