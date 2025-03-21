@@ -32,10 +32,7 @@ import javax.crypto.SecretKey;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.security.MessageDigest;
@@ -86,9 +83,12 @@ public class XCraft extends Plugin {
         Constructor<?> pConstructor = protocolMappingClass.getDeclaredConstructor(int.class, int.class);
         pConstructor.setAccessible(true);
 
-        Method registerPacketMethod = toServerClass.getDeclaredMethod("registerPacket",  Class.class, protocolMappingClass.arrayType() );
+        Object protocolMappingArray = Array.newInstance(protocolMappingClass, 1);
+        Array.set(protocolMappingArray, 0, pConstructor.newInstance(version, 1));
+
+        Method registerPacketMethod = toServerClass.getDeclaredMethod("registerPacket",  Class.class,  protocolMappingArray.getClass());
         registerPacketMethod.setAccessible(true);
-        registerPacketMethod.invoke(toServerClass, EncryptionResponsePacket.class, pConstructor.newInstance(version, 1));
+        registerPacketMethod.invoke(toServerClass, EncryptionResponsePacket.class, protocolMappingArray);
 
     }
 
