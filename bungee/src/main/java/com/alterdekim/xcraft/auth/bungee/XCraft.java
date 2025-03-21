@@ -54,7 +54,7 @@ public class XCraft extends Plugin {
     @Override
     public void onEnable() {
         try {
-            for(int v : ProtocolConstants.SUPPORTED_VERSION_IDS) injectListener(v);
+            injectListener(47);
         } catch(Exception e) {
             getLogger().severe("Error injecting auth packet. " + e.getMessage());
         }

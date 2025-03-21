@@ -32,15 +32,6 @@ import static com.alterdekim.xcraft.auth.bungee.XCraft.INTERNAL_PORT;
 
 
 public class EncryptionResponsePacket extends EncryptionResponse {
-    @Override
-    public void read(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        super.read(buf, direction, protocolVersion);
-    }
-
-    @Override
-    public void write(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
-        super.write(buf, direction, protocolVersion);
-    }
 
     @Override
     public void handle(AbstractPacketHandler handler) throws Exception {
