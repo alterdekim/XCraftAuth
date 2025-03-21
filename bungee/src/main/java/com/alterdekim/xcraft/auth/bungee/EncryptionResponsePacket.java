@@ -29,15 +29,9 @@ import static com.alterdekim.xcraft.auth.bungee.XCraft.INTERNAL_PORT;
 
 public class EncryptionResponsePacket extends EncryptionResponse {
 
-    private final Logger logger;
-
-    public EncryptionResponsePacket(Logger logger) {
-        this.logger = logger;
-    }
-
     @Override
     public void handle(AbstractPacketHandler handler) throws Exception {
-        this.logger.info("Intercepted handle request, returning custom response...");
+        //this.logger.info("Intercepted handle request, returning custom response...");
         InitialHandler initialHandler = (InitialHandler) handler;
         Class<?> initialHandlerClass = InitialHandler.class;
         Method finish = initialHandlerClass.getDeclaredMethod("finish");
@@ -88,13 +82,13 @@ public class EncryptionResponsePacket extends EncryptionResponse {
                             finish.invoke(initialHandler);
                             return;
                         } catch (Exception e) {
-                            EncryptionResponsePacket.this.logger.log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", e);
+                            //EncryptionResponsePacket.this.logger.log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", e);
                         }
                     }
                     initialHandler.disconnect("You're in offline mode");
                 } else {
                     initialHandler.disconnect("XCraftAuth has failed to authenticate you");
-                    EncryptionResponsePacket.this.logger.log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", error);
+                    //EncryptionResponsePacket.this.logger.log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", error);
                 }
             }
         };

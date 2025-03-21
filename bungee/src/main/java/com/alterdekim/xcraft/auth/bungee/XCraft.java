@@ -93,7 +93,7 @@ public class XCraft extends Plugin {
         packetMap.remove(EncryptionResponse.class);
         packetConstructors.remove(0x01);
         packetMap.put( EncryptionResponsePacket.class, 0x01);
-        packetConstructors.put( 0x01, EncryptionResponsePacket.class.getDeclaredConstructor(Logger.class).newInstance(getLogger()) );
+        packetConstructors.put( 0x01, EncryptionResponsePacket.class.getDeclaredConstructor() );
 
         packetMapField.set(protocolData, packetMap);
         packetConstructorsField.set(protocolData, packetConstructors);
