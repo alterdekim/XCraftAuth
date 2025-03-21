@@ -23,6 +23,7 @@ import net.md_5.bungee.netty.ChannelWrapper;
 import net.md_5.bungee.netty.cipher.CipherDecoder;
 import net.md_5.bungee.netty.cipher.CipherEncoder;
 import net.md_5.bungee.protocol.Protocol;
+import net.md_5.bungee.protocol.ProtocolConstants;
 import net.md_5.bungee.protocol.packet.EncryptionRequest;
 import net.md_5.bungee.protocol.packet.EncryptionResponse;
 
@@ -39,7 +40,7 @@ import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class XCraft extends Plugin implements Listener {
+public class XCraft extends Plugin {
 
     private static SaltNic server = null;
 
@@ -50,7 +51,11 @@ public class XCraft extends Plugin implements Listener {
 
     @Override
     public void onEnable() {
-        getProxy().getPluginManager().registerListener(this, this);
+        try {
+            for(int v : ProtocolConstants.SUPPORTED_VERSION_IDS) injectListener(v);
+        } catch(Exception e) {
+            getLogger().severe("Error injecting auth packet. " + e.getMessage());
+        }
         try {
             Configuration config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
             SERVER_PORT = config.getInt("public_port");
