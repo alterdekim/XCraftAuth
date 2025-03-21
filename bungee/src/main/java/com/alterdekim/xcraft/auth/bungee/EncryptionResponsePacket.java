@@ -1,6 +1,7 @@
 package com.alterdekim.xcraft.auth.bungee;
 
 import com.google.common.base.Preconditions;
+import io.netty.buffer.ByteBuf;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.EncryptionUtil;
 import net.md_5.bungee.Util;
@@ -13,6 +14,7 @@ import net.md_5.bungee.netty.ChannelWrapper;
 import net.md_5.bungee.netty.cipher.CipherDecoder;
 import net.md_5.bungee.netty.cipher.CipherEncoder;
 import net.md_5.bungee.protocol.AbstractPacketHandler;
+import net.md_5.bungee.protocol.ProtocolConstants;
 import net.md_5.bungee.protocol.packet.EncryptionRequest;
 import net.md_5.bungee.protocol.packet.EncryptionResponse;
 
@@ -24,14 +26,25 @@ import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static net.md_5.bungee.BungeeCord.getInstance;
+
 import static com.alterdekim.xcraft.auth.bungee.XCraft.INTERNAL_PORT;
 
 
 public class EncryptionResponsePacket extends EncryptionResponse {
+    @Override
+    public void read(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        super.read(buf, direction, protocolVersion);
+    }
+
+    @Override
+    public void write(ByteBuf buf, ProtocolConstants.Direction direction, int protocolVersion) {
+        super.write(buf, direction, protocolVersion);
+    }
 
     @Override
     public void handle(AbstractPacketHandler handler) throws Exception {
-        //this.logger.info("Intercepted handle request, returning custom response...");
+        getInstance().getLogger().info("Intercepted handle request, returning custom response...");
         InitialHandler initialHandler = (InitialHandler) handler;
         Class<?> initialHandlerClass = InitialHandler.class;
         Method finish = initialHandlerClass.getDeclaredMethod("finish");
@@ -82,13 +95,13 @@ public class EncryptionResponsePacket extends EncryptionResponse {
                             finish.invoke(initialHandler);
                             return;
                         } catch (Exception e) {
-                            //EncryptionResponsePacket.this.logger.log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", e);
+                            getInstance().getLogger().log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", e);
                         }
                     }
                     initialHandler.disconnect("You're in offline mode");
                 } else {
                     initialHandler.disconnect("XCraftAuth has failed to authenticate you");
-                    //EncryptionResponsePacket.this.logger.log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", error);
+                    getInstance().getLogger().log(Level.SEVERE, "Error authenticating " + initialHandler.getName() + " with XCraftAuth", error);
                 }
             }
         };
