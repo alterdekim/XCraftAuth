@@ -89,7 +89,8 @@ public class XCraft extends Plugin {
 
         Method registerPacketMethod = toServerClass.getDeclaredMethod("registerPacket",  Class.class,  protocolMappingArray.getClass());
         registerPacketMethod.setAccessible(true);
-        registerPacketMethod.invoke(toServerClass, EncryptionResponsePacket.class, protocolMappingArray);
+
+        registerPacketMethod.invoke(Protocol.LOGIN.TO_SERVER, EncryptionResponsePacket.class, protocolMappingArray);
 
     }
 
