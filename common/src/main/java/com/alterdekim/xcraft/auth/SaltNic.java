@@ -250,7 +250,7 @@ public class SaltNic extends NanoHTTPD {
         }
 
         MinecraftTexturesPayload minecraftTexturesPayload = new MinecraftTexturesPayload(System.currentTimeMillis(), uuid, this.storage.getUsername(uuid), textures);
-        return new MinecraftProperty("textures", Base64.getEncoder().encodeToString(JsonStream.serialize(minecraftTexturesPayload).getBytes()));
+        return new MinecraftProperty("textures", Base64.getEncoder().encodeToString(JsonStream.serialize(minecraftTexturesPayload).getBytes()), (Math.random()+""));
     }
 
     private Response handleProfileRequest(IHTTPSession session, String uri) {

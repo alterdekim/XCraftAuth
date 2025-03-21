@@ -8,4 +8,5 @@ import lombok.Getter;
 public class MinecraftProperty {
     private String name;
     private String value;
+    private String signature;
 }
