@@ -1,5 +1,6 @@
 package com.alterdekim.xcraft.auth.database;
 
+import com.alterdekim.xcraft.auth.UserId;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import org.mapdb.DB;
@@ -7,6 +8,7 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import java.io.File;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ConcurrentMap;
 
 public class UserStorage {
@@ -40,6 +42,10 @@ public class UserStorage {
             return user.getPassword();
         }
         return null;
+    }
+
+    public String getUserPasswordByName(String username) throws NoSuchAlgorithmException {
+        return getUserPassword(UserId.generateUserId(username));
     }
 
     public void close() {

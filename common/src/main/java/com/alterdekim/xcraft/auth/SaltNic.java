@@ -62,6 +62,8 @@ public class SaltNic extends NanoHTTPD {
             return handleHasJoinedRequest(session);
         } else if (uri.startsWith("/api/profile/") && method == Method.GET) {
             return handleProfileRequest(session, uri);
+        } else if (uri.startsWith("/api/login") && method == Method.POST) {
+            return handleLoginRequest(session);
         } else if (uri.startsWith("/api/register") && method == Method.POST) {
             return handleProfileRegistration(session);
         } else if (Method.POST == method && "/api/set_model".equals(uri)) {
@@ -305,6 +307,40 @@ public class SaltNic extends NanoHTTPD {
         } catch (Exception e) {
             logger.info("Error while processing sign up request from client: " + e.getMessage());
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Server error: " + e.getMessage());
+        }
+    }
+
+    private Response handleLoginRequest(IHTTPSession session) {
+        try {
+            Map<String, String> files = new HashMap<>();
+            session.parseBody(files);
+            SignUpRequest loginRequest = JsonIterator.deserialize(files.get("postData"), SignUpRequest.class);
+
+            if (loginRequest == null) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Invalid JSON format");
+            }
+
+            String username = loginRequest.getUsername();
+            String password = loginRequest.getPassword();
+
+            if (username == null || password == null) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Missing username or password");
+            }
+
+            if( this.storage.getUserPasswordByName(username) == null ) {
+                return newFixedLengthResponse(Response.Status.CONFLICT, "text/plain", "User doesn't exist");
+            }
+
+            boolean validSession = PasswordHasher.checkPassword(password, this.storage.getUserPasswordByName(username));
+
+            if (validSession) {
+                return newFixedLengthResponse(Response.Status.OK, "application/json", "{}");
+            } else {
+                return invalidSession;
+            }
+        } catch (Exception e) {
+            logger.info("Error while processing join request from client: " + e.getMessage());
+            return invalidSession;
         }
     }
 
