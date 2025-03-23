@@ -334,12 +334,12 @@ public class SaltNic extends NanoHTTPD {
             boolean validSession = PasswordHasher.checkPassword(password, this.storage.getUserPasswordByName(username));
 
             if (validSession) {
-                return newFixedLengthResponse(Response.Status.OK, "application/json", "{}");
+                return newFixedLengthResponse(Response.Status.OK, "text/plain", JsonStream.serialize(new SignUpResponse(UserId.generateUserId(username))));
             } else {
                 return invalidSession;
             }
         } catch (Exception e) {
-            logger.info("Error while processing join request from client: " + e.getMessage());
+            logger.info("Error while processing login request from client: " + e.getMessage());
             return invalidSession;
         }
     }
