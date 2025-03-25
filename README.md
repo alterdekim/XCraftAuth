@@ -1,10 +1,16 @@
-# 🔐 XCraftAuth – Yggdrasil Authentication
+<img align="left" width="100" height="100" src="https://w0n.zip/file/elnvVb">
+
+
+### XCraftAuth
+Custom yggdrasil authentication
+
+#
 
 ![Jenkins Build](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fjenkins.awain.net%2Fjob%2FXCraftAuth%2F)
 ![Gitea Last Commit](https://img.shields.io/gitea/last-commit/alterwain/XCraftAuth?gitea_url=https%3A%2F%2Fgitea.awain.net%2F)
 
 
-A powerful **custom session server** plugin for Spigot-based servers, allowing full **Yggdrasil authentication** support across **1.8-1.16.5 Minecraft versions**! This plugin enables true **online mode authentication** with a self-hosted session server, providing flexibility for your Minecraft network.
+A powerful **custom session server** plugin for minecraft servers, allowing full **Yggdrasil authentication** support across **1.8-1.16.5 Minecraft versions**! This plugin enables true **online mode authentication** with a self-hosted session server, providing flexibility for your Minecraft network.
 
 **THIS PLUGIN ONLY WORKS ON SERVERS THAT RUN UNDER JAVA 8, NEWER VERSIONS OF JAVA WILL BREAK THIS PLUGIN**
 
@@ -24,6 +30,10 @@ A powerful **custom session server** plugin for Spigot-based servers, allowing f
 - **CatServer** (Forge + Bukkit)
 - **Magma** (Forge + Bukkit)
 - **Mohist** (Forge + Bukkit)  
+
+✅ **Compatible with Bungeecord-based server software**, including:
+- **Bungeecord**
+- **Waterfall**
 
 ✅ **Full Yggdrasil authentication** – Works with your custom authentication system.  
 ✅ **Self-hosted session server** – No need for Mojang's authentication services.  
