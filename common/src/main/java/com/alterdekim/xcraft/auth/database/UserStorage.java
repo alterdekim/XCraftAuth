@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public class UserStorage {
     private static final File DB_FILE = new File("plugins/XCraftAuth/users.db");
-    private final DB db = DBMaker.fileDB(DB_FILE).fileMmapEnable().make();
+    private final DB db = DBMaker.fileDB(DB_FILE).fileMmapEnableIfSupported().checksumHeaderBypass().make();
     private final ConcurrentMap<String, String> users = db.hashMap("users", Serializer.STRING, Serializer.STRING).createOrOpen();
 
     public void saveUser(String uuid, User user) {
